@@ -43,14 +43,11 @@ module.exports = (robot) => {
 	    }
 
 	    
-	};
-	else if (res.json.options[res.json.response]==="借りる"){
+	} else if (res.json.options[res.json.response]==="借りる"){
 	    //借りるのコード
-	};
-	else if (res.json.options[res.json.response]==="貸す"){
+	} else if (res.json.options[res.json.response]==="貸す"){
 	    //貸すのコード
-	};
-	else {
+	} else {
 	    //nullの場合初回に帰る
 	};
     });

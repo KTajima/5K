@@ -3,10 +3,10 @@
 //未完成です//
 
 module.exports = (robot) => {
+	/*
    let data = robot.brain.get(res.message.user.name.toLowerCase());
     
    function Delete(){
-        delete ; 
    }
     
    function Pay(){
@@ -15,20 +15,21 @@ module.exports = (robot) => {
           data.item["残高"] -= res.message.text;
         });
    }
-   function Edit(){
-       robot.respond(/(.*)/i, (res) => {
-          res.send("どの項目を編集しますか?");
-       });
-       robot.respond('(.*/)', (res) => {
-          let mes = res.message.txt;
-          res.send("値を入力してください");
-          robot.respond('(.*/)', (res) => {
-            res.json.options[mes]= res.message.txt; 
-          });   
-       });
-    }
+   */
+//    function Edit(){
+//        robot.respond(/(.*)/i, (res) => {
+//           res.send("どの項目を編集しますか?");
+//        });
+//        robot.respond('(.*/)', (res) => {
+//           let mes = res.message.txt;
+//           res.send("値を入力してください");
+//           robot.respond('(.*/)', (res) => {
+//             res.json.options[mes]= res.message.txt; 
+//           });   
+//        });
+//     }
    // Edit();
-    Pay();
+//     Pay();
 };
 
 

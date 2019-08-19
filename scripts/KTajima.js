@@ -17,8 +17,7 @@ function dateToString(date) {
 module.exports = (robot) => {
 	robot.respond(/(..*)さん$/, (res) => {
 		let data = robot.brain.get(res.message.user.name.toLowerCase()) || null
-		if (data === null)
-		{
+		if (data === null) {
 			res.send("NULL");
 			data = {};
 			data.state = State.TARGET;
