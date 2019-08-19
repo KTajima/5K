@@ -7,8 +7,10 @@
 //   time - Reply with current time
 'use strict';
 
+var balance_yen = 20000;
 
-
+module.exports = (robot) => {
+  robot.respond(/情報/i, (res) => {
 
 class data{
   constructor( id, name,total,desc,date,deadline,balance,split,period) {
@@ -31,4 +33,8 @@ class data{
 
 var user1 = new data(1,"はる",20000,"お茶会",20190908,201909030,balance_yen,2,1);
 
-console.log(user1.getName());
+test = console.log(user1.getName());
+
+  res.send(test);
+});
+};
