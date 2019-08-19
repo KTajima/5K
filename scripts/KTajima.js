@@ -88,7 +88,7 @@ module.exports = (robot) => {
 		}
 	});
 
-	robot.respond(/詳細: (\S*)/, (res) => {
+	robot.respond(/詳細:\s*(\S*)/, (res) => {
 		let data = robot.brain.get(res.message.user.name.toLowerCase());
 		if (data.state === State.DESCRIPTION) {
 			data.item["詳細"] = res.match[1];
