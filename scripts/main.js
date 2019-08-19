@@ -26,26 +26,25 @@ module.exports = (robot) => {
   });
 
   robot.respond('select', (res) => {
-    if (res.json.options[res.json.response] === "一覧から選択") {
-      res.send({
-        question: '選択',
-        options: ['完了', '編集', '支払い']
-      });
+    if (res.json.question === "操作") {
+      if (res.json.options[res.json.response] === "一覧から選択") {
+        res.send({
+          question: '選択',
+          options: ['完了', '編集', '支払い']
+        });
+      } else if (res.json.options[res.json.response] === "借りる") {
+        // 借りるのコード
+      } else if (res.json.options[res.json.response] === "貸す") {
+        // 貸すのコード
+      }
+    } else if (res.json.question === "選択") {
       if (res.json.options[res.json.response] === "完了") {
         // 完了のコード
       } else if (res.json.options[res.json.response] === "編集") {
         // 編集のコード
       } else if (res.json.options[res.json.response] === "支払い") {
         // 支払いのコード
-      } else {
-        // nullの場合初回に帰る
       }
-    } else if (res.json.options[res.json.response] === "借りる") {
-      // 借りるのコード
-    } else if (res.json.options[res.json.response] === "貸す") {
-      // 貸すのコード
-    } else {
-      // nullの場合初回に帰る
     };
   });
 
