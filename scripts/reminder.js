@@ -8,19 +8,25 @@ const CronJob = require('cron').CronJob;
 // // 初期処理フラグ
 // var isNew = 0;
 
+var remind = null;
+
 // // 初期処理用に以下のようなコードを追加すること。
-// module.exports = (robot) => {
-//     // 書き換えた方がいいかもしれない。初期処理用に一回だけ実行する。
-//     if (isNew == 0) {
-//         event = new Remind(robot);
-//         isNew = 1
-//     }
-//     // 以下はうまく動かない
-//     // robot.brain.once('loaded', () => {
-//     //     event = new Event(robot);
-//     // });
-//     robot.join((res) => event.joinFunc(res));
-// };
+module.exports = (robot) => {
+  if (remind === null) {
+    remind = new Remind(robot);
+  }
+  let job = () => {
+    Object.entries(robot.brain.rooms()).map(([id, room]) => {
+      robot.send({ room: id }, { text: "CRON TEST at " + id });
+    });
+  };
+  //   動作チェック済み。ただし、実験のため一時コメントアウト。
+//   new CronJob({
+//     cronTime: '*/05 * * * * *',
+//     onTick: () => job(),
+//     timeZone: 'Asia/Tokyo'
+//   }).start();
+};
 
 // const joinFunc = function (res) {
 //     event.joinFunc(res);
@@ -37,7 +43,6 @@ class Remind {
         this.isReminded = false;
     }
 
-    register_
     // トークルームへメッセージを飛ばす
     sayMsg(sendObj) {
         this.robot.send({ room: this.room }, { text: sendObj });
