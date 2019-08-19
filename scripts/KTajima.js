@@ -10,6 +10,10 @@ let State = {
 	FREQ: 6,
 };
 
+function dateToString(date) {
+	return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+}
+
 module.exports = (robot) => {
 	robot.respond(/(..*)さん$/, (res) => {
 		let data = robot.brain.get(res.message.user.name.toLowerCase()) || null
@@ -60,8 +64,8 @@ module.exports = (robot) => {
 	robot.respond(/([1-9]\d*)回$/, (res) => {
 		let data = robot.brain.get(res.message.user.name.toLowerCase());
 		if (data.state === State.DIVISION) {
-			data.item["分割回数"] = res.match[1];
-			if (data.item["分割回数"] > 1) {
+			data.item["分割"] = res.match[1];
+			if (data.item["分割"] > 1) {
 				data.state = State.FREQ;
 				res.send("続いて返却周期を入力してください\n(例: 1月毎、1日毎、1年毎)");
 			} else {
@@ -76,7 +80,7 @@ module.exports = (robot) => {
 	robot.respond(/([1-9]\d*)(日|月|年)毎$/, (res) => {
 		let data = robot.brain.get(res.message.user.name.toLowerCase());
 		if (data.state === State.FREQ) {
-			data.item["周期"] = res.match[1];
+			date.item["周期"] = res.match[1] + res.match[2] + "毎";
 			data.state = State.DESCRIPTION;
 			res.send("続いて詳細を例のように入力してください\n(例: 詳細: 〇〇)");
 		} else {
@@ -89,7 +93,15 @@ module.exports = (robot) => {
 		if (data.state === State.DESCRIPTION) {
 			data.item["詳細"] = res.match[1];
 			data.state = State.TARGET;
-			res.send("内容はこちらでよろしいですか?\n「" + data.item["詳細"] + "」");
+			res.send("内容はこちらでよろしいですか?\n「"
+				+ "相手: " + data.item["相手"]
+				+ "\n総額: " + data.item["総額"]
+				+ "\n借りた日付: " + dateToString(data.item["借りた日付"])
+				+ "\n期限: " + dateToString(data.item["期限"])
+				+ "\n分割: " + data.item["分割"] + "回払い"
+				+ (data.item["分割"] > 1 ? "\n周期: " + data.item["周期"] : "")
+				+ "\n詳細: " + data.item["詳細"]
+				+ "」");
 		} else {
 			res.send("この値は受け付けていません");
 		}
