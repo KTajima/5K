@@ -15,18 +15,45 @@ module.exports = (robot) => {
 	    question: '操作',
 	    options: ['借りる', '貸す', '一覧から選択']
 	});
+	
     });
 
-    
     robot.respond('select', (res) => {
-	if (res.json.response === null) {
-            res.send(`Your question is ${res.json.question}.`);
-	} else {
+	/*
+	  if (res.json.response === null) {
+	  res.send(`Your question is ${res.json.question}.`);
+	  }
+	*/
+	if (res.json.options[res.json.response]==="一覧から選択"){
 	    res.send({
-		question: '操作',
+		question: '選択',
 		options: ['完了', '編集', '支払い']
 	    });
+	    if(res.json.options[res.json.response]==="完了") {
+		//完了のコード
+	    }
+	    else if(res.json.options[res.json.response]==="編集"){
+		//編集のコード
+	    }
+	    else if(res.json.options[res.json.response]==="支払い"){
+		//支払いのコード
+	    }
+	    else {
+		//nullの場合初回に帰る
+	    }
+
+	    
+	};
+	else if (res.json.options[res.json.response]==="借りる"){
+	    //借りるのコード
+	};
+	else if (res.json.options[res.json.response]==="貸す"){
+	    //貸すのコード
+	};
+	else {
+	    //nullの場合初回に帰る
 	};
     });
+    
 
 };
