@@ -11,6 +11,10 @@ let State = {
 };
 
 class Data {
+  constructor() {
+    this.state = State.LIST;
+    this.item = {};
+  }
 }
 
 function dateToString(date) {
@@ -49,26 +53,30 @@ module.exports = (robot) => {
   });
 
   robot.respond(/(..*)さん$/, (res) => {
-    let data = robot.brain.get(res.message.user.name.toLowerCase()) || null
-    if (data === null) {
+    let user = robot.brain.get(res.message.user.name.toLowerCase()) || null;
+    if (user === null) {
       res.send("NULL");
-      data = {};
-      data.state = State.TARGET;
-      data.item = {};
+      user = {};
+      user.dataset = [];
+      let data = new Data();
+      user.dataset.push(data);
+      robot.brain.set(res.message.user.name.toLowerCase(), user);
+      user = robot.brain.get(res.message.user.name.toLowerCase());
     }
+    let data = user.dataset[user.dataset.length - 1];
     res.send(data.state);
     if (data.state === State.TARGET) {
       data.item["相手"] = res.match[1];
       data.state = State.TOTAL;
       res.send("続いて総額を〇〇円の形で入力してください");
-      robot.brain.set(res.message.user.name.toLowerCase(), data);
     } else {
       res.send("この値は受け付けていません");
     }
   });
 
   robot.respond(/([1-9]\d*|0)円$/, (res) => {
-    let data = robot.brain.get(res.message.user.name.toLowerCase());
+    let user = robot.brain.get(res.message.user.name.toLowerCase());
+    let data = user.dataset[user.dataset.length - 1];
     if (data.state == State.TOTAL) {
       data.item["総額"] = res.match[1];
       data.state = State.DATE;
@@ -79,7 +87,8 @@ module.exports = (robot) => {
   });
 
   robot.respond(/(\d{4})年(\d{1,2})月(\d{1,2})日$/, (res) => {
-    let data = robot.brain.get(res.message.user.name.toLowerCase());
+    let user = robot.brain.get(res.message.user.name.toLowerCase());
+    let data = user.dataset[user.dataset.length - 1];
     if (data.state === State.DATE) {
       data.item["借りた日付"] = new Date(res.match[1], res.match[2], res.match[3], 0, 0);
       data.state = State.LIMIT;
@@ -94,7 +103,8 @@ module.exports = (robot) => {
   });
 
   robot.respond(/([1-9]\d*)回$/, (res) => {
-    let data = robot.brain.get(res.message.user.name.toLowerCase());
+    let user = robot.brain.get(res.message.user.name.toLowerCase());
+    let data = user.dataset[user.dataset.length - 1];
     if (data.state === State.DIVISION) {
       data.item["分割"] = res.match[1];
       if (data.item["分割"] > 1) {
@@ -110,7 +120,8 @@ module.exports = (robot) => {
   });
 
   robot.respond(/([1-9]\d*)(日|月|年)毎$/, (res) => {
-    let data = robot.brain.get(res.message.user.name.toLowerCase());
+    let user = robot.brain.get(res.message.user.name.toLowerCase());
+    let data = user.dataset[user.dataset.length - 1];
     if (data.state === State.FREQ) {
       date.item["周期"] = res.match[1] + res.match[2] + "毎";
       data.state = State.DESCRIPTION;
@@ -121,7 +132,8 @@ module.exports = (robot) => {
   });
 
   robot.respond(/詳細:\s*(\S*)/, (res) => {
-    let data = robot.brain.get(res.message.user.name.toLowerCase());
+    let user = robot.brain.get(res.message.user.name.toLowerCase());
+    let data = user.dataset[user.dataset.length - 1];
     if (data.state === State.DESCRIPTION) {
       data.item["詳細"] = res.match[1];
       data.state = State.TARGET;
