@@ -209,9 +209,10 @@ module.exports = (robot) => {
       } else if (res.json.options[res.json.response] === "編集") {
         // 編集のコード
         let user = robot.brain.get(res.message.user.name.toLowerCase());
-        res.send(user.dataset[user.selected_id].item["相手"]);
+        let data = user.dataset[user.selected_id];
         res.send("「"
-        + "\n総額: " + data.item["総額"]          
+        + "相手: " + data.item["相手"] + "さん"
+        + "\n総額: " + data.item["総額"] + "円"   
         + "\n期限: " + dateToString(data.item["期限"])
         + "\n分割: " + data.item["分割"] + "回払い"
         + (data.item["分割"] > 1 ? "\n周期: " + data.item["周期"] : "")
@@ -225,8 +226,12 @@ module.exports = (robot) => {
         // 支払いのコード
       }
     } else if (res.json.question === "編集したい項目を選択") {
+      let user = robot.brain.get(res.message.user.name.toLowerCase());
+      let data = user.dataset[user.selected_id];
+      data.state = State.EDIT;
         if(res.json.options[res.json.responce] === "総額"){
           //総額のコード
+          res.send("総額を〇〇円の形で入力してください");
         }else if(res.json.options[res.json.responce] === "期限"){
           //詳細のコード
         }else if(res.json.options[res.json.responce] === "分割方法"){
@@ -277,6 +282,8 @@ module.exports = (robot) => {
       data.item["総額"] = res.match[1];
       data.state = State.DATE;
       res.send("続いて借りた日を例のように入力してください\n(例: 1998年12月31日)");
+    } else if (data.state === State.EDIT) {
+      data.item["総額"] = res.match[1];
     } else {
       res.send("この値は受け付けていません");
     }
@@ -335,15 +342,15 @@ module.exports = (robot) => {
     }
   });
 
-  robot.respond(/詳細:\s*(\S*)/, (res) => {
+  robot.respond(/詳細(:|：)\s*(\S*)/, (res) => {
     let user = robot.brain.get(res.message.user.name.toLowerCase());
     let data = user.dataset[user.dataset.length - 1];
     if (data.state === State.DESCRIPTION) {
-      data.item["詳細"] = res.match[1];
+      data.item["詳細"] = res.match[2];
       data.state = State.TARGET;
       res.send("内容はこちらでよろしいですか?\n「"
-        + "相手: " + data.item["相手"]
-        + "\n総額: " + data.item["総額"]
+        + "相手: " + data.item["相手"] + "さん"
+        + "\n総額: " + data.item["総額"] + "円"
         + "\n借りた日付: " + dateToString(data.item["借りた日付"])
         + "\n期限: " + dateToString(data.item["期限"])
         + "\n分割: " + data.item["分割"] + "回払い"
