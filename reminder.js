@@ -1,30 +1,28 @@
 'use strict';
-// スケジューラ用
+// 使用するモジュール
 const CronJob = require('cron').CronJob;
+require('date-utils');
 
-// テスト用
-// // インスタンス
 // var event;
-// // 初期処理フラグ
-// var isNew = 0;
 
-// // 初期処理用に以下のようなコードを追加すること。
 // module.exports = (robot) => {
-//     // 書き換えた方がいいかもしれない。初期処理用に一回だけ実行する。
-//     if (isNew == 0) {
+//     // インスタンスがなければ作成する。
+//     if (!event) {
 //         event = new Remind(robot);
-//         isNew = 1
 //     }
-//     // 以下はうまく動かない
-//     // robot.brain.once('loaded', () => {
-//     //     event = new Event(robot);
-//     // });
+//     robot.respond(/START$/i, (res) => {
+//         event.startReminder()
+//         event.sayMsg('startしました')
+//     });
+
+//     robot.respond(/STOP$/i, (res) => {
+//         event.stopReminder()
+//         event.sayMsg('stopしました')
+//     });
+
+//     // ボット参加
 //     robot.join((res) => event.joinFunc(res));
 // };
-
-// const joinFunc = function (res) {
-//     event.joinFunc(res);
-// }
 
 class Remind {
     // 初期処理は以下である。
@@ -32,33 +30,69 @@ class Remind {
     // 2. ボット参加時にjoinFuncを呼び出す。
     // すると、リマインドできる。
     constructor(robot) {
-        //　初期設定
+        // 初期設定
         this.robot = robot;
+        // 二重処理防止用のフラグ
         this.isReminded = false;
+        this.reminderjob = null;
     }
 
-    register_
+    // リマインダを止める
+    stopReminder() {
+        if (this.reminderjob) {
+            this.reminderjob.stop();
+        }
+    }
+
+    // リマインダを有効にする
+    startReminder() {
+        this.comparedDate = new Date
+        if (!this.reminderjob) {
+            // スケジューラー(5秒間隔で)
+            this.reminderjob = new CronJob({
+                cronTime: '*/05 * * * * *',
+                onTick: () => this.checkChangeDay(),
+                start: true,
+                timeZone: 'Asia/Tokyo'
+            });
+        } else {
+            this.reminderjob.start();
+        }
+    }
+
+    // 強制的にリマインダを発行する
+    publishReminder(item) {
+        this.sendOrderMsg()
+    }
     // トークルームへメッセージを飛ばす
     sayMsg(sendObj) {
         this.robot.send({ room: this.room }, { text: sendObj });
     }
 
-
+    // テスト用
     sendOrderMsg() {
         this.sayMsg('Hello in the remind');
+    }
+
+    // 日付が変わったか判定する. スケジューラにより呼び出される。
+    // テスト用に分が変わっているか判定している。
+    checkChangeDay() {
+        require('date-utils');
+        let now = new Date;
+        if (now.getMinutes() != this.comparedDate.getMinutes()) {
+            // 二重処理防止
+            if (!this.isReminded) {
+                this.isReminded = true;
+                this.publishReminder(null);
+                this.isReminded = false;
+            }
+        }
+        this.comparedDate = now;
     }
 
     // ボット参加時に呼び出す.
     joinFunc(res) {
         this.room = res.message.room;
-
-        // スケジューラー(5秒間隔で)
-        this.reminderjob = new CronJob({
-            cronTime: '*/05 * * * * *',
-            onTick: () => this.sendOrderMsg(),
-            start: true,
-            timeZone: 'Asia/Tokyo'
-        });
     }
 
 
