@@ -1,4 +1,6 @@
 'use strict';
+const CronJob = require('cron').CronJob;
+require('date-utils');
 
 let State = {
   ID: 0,
@@ -37,7 +39,105 @@ function toHalfNumber(number) {
   });
 }
 
+class Remind {
+    // 初期処理は以下の通り*********************
+    constructor(robot) {
+        // 初期設定
+        this.robot = robot;
+        // 二重処理防止用のフラグ
+        this.isReminded = false;
+        // スケジューラ
+        this.reminderjob = null;
+    }
+
+    // スケジューラ関連***************************
+    //
+    // リマインダを止める
+    stopReminder() {
+        if (this.reminderjob) {
+            this.reminderjob.stop();
+        }
+    }
+
+    // リマインダを有効にする
+    startReminder() {
+        this.comparedDate = new Date;
+        console.log("Hello")
+        if (!this.reminderjob) {
+            // スケジューラー(5秒間隔で)
+            this.reminderjob = new CronJob({
+                cronTime: '*/05 * * * * *',
+                onTick: () => this.checkChangeDay(),
+                start: true,
+                timeZone: 'Asia/Tokyo'
+            });
+        } else {
+            this.reminderjob.start();
+        }
+    }
+    // 日付が変わったか判定する. スケジューラにより呼び出される。
+    checkChangeDay() {
+        console.log("Hello")
+        require('date-utils');
+        let now = new Date;
+        if (now.getDate() != this.comparedDate.getDate()) {
+            // 二重処理防止
+            if (!this.isReminded) {
+                this.isReminded = true;
+                this.publishReminders();
+                this.isReminded = false;
+            }
+        }
+        this.comparedDate = now;
+    }
+
+    // 発行機能**************************************
+    //
+    // リマインダを発行する
+    publishReminders() {
+        // 全てのトークルームで回す
+        for (let [id, room] of Object.entries(this.robot.brain.rooms())) {
+            // データを取得
+            var user = this.robot.brain.get(room.users[0].name.toLowerCase())
+
+            // nullの場合はcontinue, そうでない場合処理を行う。
+            if (!user) {
+                continue;
+            } else {
+                // 現在時刻取得
+                let now = new Date();
+
+                // リマインドすべきデータのリスト
+                let reminderData = [];
+
+                // リマインドすべきデータを探す
+                for (let i of user.dataset) {
+                    let compareDate = i["期限"]
+                    // 日付比較。同じであればリマインダすべきデータとしてマークする。
+                    if (compareDate.getFullYear() == now.getFullYear() && compareDate.getMonth() == now.getMonth() && compareDate.getDate() == now.getDate()) {
+                        reminderData.push(i);
+                    }
+                }
+                // リマインドすべきデータがあればリマインドする。
+                if (reminderData.length > 0) {
+                    var str = "今日が返済日です。\n"
+                    for (let i of user.dataset) {
+                        str += i["相手"] + "さんに" + (i["一回あたりの額"]) + "円\n";
+                    }
+                    str += "払いましょう!!!"
+                    this.robot.send({ room: id }, { text: str });
+                }
+            }
+        }
+    }
+}
+
+var reminder;
 module.exports = (robot) => {
+  if (!reminder) {
+    reminder = new Remind(robot);
+    reminder.startReminder();
+  }
   robot.respond(/Hey money!$/i, (res) => {
     res.send({
       question: '操作',
@@ -149,6 +249,10 @@ module.exports = (robot) => {
           res.send("ERROR");
         }
         robot.brain.get(res.message.user.name.toLowerCase(), user);
+      } else {
+        res.send("キャンセルしました。");
+        let user = robot.brain.get(res.message.user.name.toLowerCase());
+        user.dataset.pop();
       }
     }
   });
