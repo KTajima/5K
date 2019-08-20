@@ -21,6 +21,12 @@ function dateToString(date) {
   return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
 }
 
+function toHalfNumber(number) {
+  return String(number).replace(/[０-９]/g, (str) => {
+    return String.fromCharCode(str.charCodeAt(0) - 0xFEE0);
+  });
+}
+
 module.exports = (robot) => {
   robot.respond(/操作$/i, (res) => {
     res.send({
@@ -36,10 +42,16 @@ module.exports = (robot) => {
           question: '選択',
           options: ['完了', '編集', '支払い']
         });
-      } else if (res.json.options[res.json.response] === "借りる") {
-        // 借りるのコード
-      } else if (res.json.options[res.json.response] === "貸す") {
-        // 貸すのコード
+      } else {
+        let user = robot.brain.get(res.message.user.name.toLowerCase()) || null;
+        if (user === null) {
+          user = {};
+          user.dataset = [];
+        }
+        let data = new Data();
+        data.state = State.TARGET;
+        user.dataset.push(data);
+        robot.brain.set(res.message.user.name.toLowerCase(), user);
       }
     } else if (res.json.question === "選択") {
       if (res.json.options[res.json.response] === "完了") {
@@ -54,15 +66,6 @@ module.exports = (robot) => {
 
   robot.respond(/(..*)さん$/, (res) => {
     let user = robot.brain.get(res.message.user.name.toLowerCase()) || null;
-    if (user === null) {
-      res.send("NULL");
-      user = {};
-      user.dataset = [];
-      let data = new Data();
-      user.dataset.push(data);
-      robot.brain.set(res.message.user.name.toLowerCase(), user);
-      user = robot.brain.get(res.message.user.name.toLowerCase());
-    }
     let data = user.dataset[user.dataset.length - 1];
     res.send(data.state);
     if (data.state === State.TARGET) {
@@ -77,7 +80,7 @@ module.exports = (robot) => {
   robot.respond(/([1-9]\d*|0)円$/, (res) => {
     let user = robot.brain.get(res.message.user.name.toLowerCase());
     let data = user.dataset[user.dataset.length - 1];
-    if (data.state == State.TOTAL) {
+    if (data.state === State.TOTAL) {
       data.item["総額"] = res.match[1];
       data.state = State.DATE;
       res.send("続いて借りた日を例のように入力してください\n(例: 1998年12月31日)");
@@ -102,14 +105,21 @@ module.exports = (robot) => {
     }
   });
 
-  robot.respond(/([1-9]\d*)回$/, (res) => {
+  robot.respond(/([1-9１-９][0-9０-９]*)回$/, (res) => {
     let user = robot.brain.get(res.message.user.name.toLowerCase());
     let data = user.dataset[user.dataset.length - 1];
+    let number = toHalfNumber(res.match[1]);
     if (data.state === State.DIVISION) {
-      data.item["分割"] = res.match[1];
+      data.item["分割"] = number;
       if (data.item["分割"] > 1) {
         data.state = State.FREQ;
-        res.send("続いて返却周期を入力してください\n(例: 1月毎、1日毎、1年毎)");
+        res.send("続いて返却周期を入力してください\n(例: 1日毎、1週毎、1月毎、1年毎)");
+        /*
+        res.send({
+          question: "続いて返却周期を決定してください",
+          options: ["1週間毎", "1ヶ月毎", "半年", "その他"],
+        });
+        */
       } else {
         data.state = State.DESCRIPTION;
         res.send("続いて詳細を例のように入力してください\n(例: 詳細: 〇〇)");
@@ -119,11 +129,12 @@ module.exports = (robot) => {
     }
   });
 
-  robot.respond(/([1-9]\d*)(日|月|年)毎$/, (res) => {
+  robot.respond(/([1-9]\d*)(日|週|月|年)毎$/, (res) => {
     let user = robot.brain.get(res.message.user.name.toLowerCase());
     let data = user.dataset[user.dataset.length - 1];
+    let number = toHalfNumber(res.match[1]);
     if (data.state === State.FREQ) {
-      date.item["周期"] = res.match[1] + res.match[2] + "毎";
+      data.item["周期"] = number + res.match[2] + "毎";
       data.state = State.DESCRIPTION;
       res.send("続いて詳細を例のように入力してください\n(例: 詳細: 〇〇)");
     } else {
