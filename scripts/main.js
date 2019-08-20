@@ -46,7 +46,15 @@ module.exports = (robot) => {
   });
 
   robot.respond('select', (res) => {
-    if (res.json.question === "操作") {
+    if (res.json.question === "データ一覧") {
+      let user = robot.brain.get(res.message.user.name.toLowerCase());
+      let index = res.json.options[res.json.response].match(/^([0-9０-９]*).*$/)[1];
+      user.selected_id = index;
+      res.send({
+        question: "選択",
+        options: ["完了", "編集", "支払い"]
+      });
+    } else if (res.json.question === "操作") {
       if (res.json.options[res.json.response] === "一覧から選択") {
         let user = robot.brain.get(res.message.user.name.toLowerCase());
         if (user === null) {
@@ -96,6 +104,8 @@ module.exports = (robot) => {
       if (res.json.options[res.json.response] === "完了") {
         // 完了のコード
         res.send("Goodbye money!");
+        let user = robot.brain.get(res.message.user.name.toLowerCase());
+        user.dataset.splice(user.selected_id, 1);
       } else if (res.json.options[res.json.response] === "編集") {
         // 編集のコード
         let user = robot.brain.get(res.message.user.name.toLowerCase());
