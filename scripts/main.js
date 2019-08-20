@@ -48,10 +48,37 @@ module.exports = (robot) => {
   robot.respond('select', (res) => {
     if (res.json.question === "操作") {
       if (res.json.options[res.json.response] === "一覧から選択") {
+        let user = robot.brain.get(res.message.user.name.toLowerCase());
+        let options = [];
+        if (user.current_index === undefined) {
+          user.current_index = 0;
+        }
+        let min = user.current_index + 5;
+        if (min > user.dataset.length) {
+          min = user.dataset.length;
+        }
+        for (let i = user.current_index; i < min; i += 1|0) {
+          options.push(user.dataset[i]);
+        }
+        if (user.current_index + 5 < user.length) {
+          user.current_index += 5
+          options.push("次の５件");
+          res.send({
+            question: 'データ一覧',
+            options: options
+          });
+        } else {
+          res.send({
+            question: 'データ一覧',
+            options: options
+          });
+        }
+        /*
         res.send({
           question: '選択',
           options: ['完了', '編集', '支払い']
         });
+        */
       } else {
         let user = robot.brain.get(res.message.user.name.toLowerCase()) || null;
         if (user === null) {
