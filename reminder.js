@@ -25,10 +25,11 @@ require('date-utils');
 // };
 
 class Remind {
-    // 初期処理は以下である。
+    // 初期処理は以下である。*********************
     // 1. インスタントを作成する。
     // 2. ボット参加時にjoinFuncを呼び出す。
     // すると、リマインドできる。
+    // 1. コンストラクター
     constructor(robot) {
         // 初期設定
         this.robot = robot;
@@ -37,13 +38,20 @@ class Remind {
         this.reminderjob = null;
     }
 
+    // 2. ボット参加時に呼び出す.
+    joinFunc(res) {
+        this.room = res.message.room;
+    }
+
+
+    // スケジューラ関連***************************
+    //
     // リマインダを止める
     stopReminder() {
         if (this.reminderjob) {
             this.reminderjob.stop();
         }
     }
-
     // リマインダを有効にする
     startReminder() {
         this.comparedDate = new Date
@@ -59,21 +67,6 @@ class Remind {
             this.reminderjob.start();
         }
     }
-
-    // 強制的にリマインダを発行する
-    publishReminder(item) {
-        this.sendOrderMsg()
-    }
-    // トークルームへメッセージを飛ばす
-    sayMsg(sendObj) {
-        this.robot.send({ room: this.room }, { text: sendObj });
-    }
-
-    // テスト用
-    sendOrderMsg() {
-        this.sayMsg('Hello in the remind');
-    }
-
     // 日付が変わったか判定する. スケジューラにより呼び出される。
     // テスト用に分が変わっているか判定している。
     checkChangeDay() {
@@ -90,10 +83,23 @@ class Remind {
         this.comparedDate = now;
     }
 
-    // ボット参加時に呼び出す.
-    joinFunc(res) {
-        this.room = res.message.room;
+
+    // 発行機能**************************************
+    //
+    // 強制的にリマインダを発行する
+    publishReminder(item) {
+        this.sendOrderMsg()
+    }
+    // トークルームへメッセージを飛ばす
+    sayMsg(sendObj) {
+        this.robot.send({ room: this.room }, { text: sendObj });
     }
 
 
+    // テスト用 いずれは削除される。
+    //
+    //
+    sendOrderMsg() {
+        this.sayMsg('Hello in the remind');
+    }
 }
