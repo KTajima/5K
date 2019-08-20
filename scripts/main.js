@@ -38,7 +38,7 @@ function toHalfNumber(number) {
 }
 
 module.exports = (robot) => {
-  robot.respond(/操作$/i, (res) => {
+  robot.respond(/Hey money!$/i, (res) => {
     res.send({
       question: '操作',
       options: ['借りる', '貸す', '一覧から選択']
@@ -49,18 +49,24 @@ module.exports = (robot) => {
     if (res.json.question === "操作") {
       if (res.json.options[res.json.response] === "一覧から選択") {
         let user = robot.brain.get(res.message.user.name.toLowerCase());
-        let options = [];
-        if (user.current_index === undefined) {
-          user.current_index = 0;
+        if (user === null) {
+          res.send("NULL");
+          return;
         }
+        let options = [];
+        user.current_index = 0;
         let min = user.current_index + 5;
         if (min > user.dataset.length) {
           min = user.dataset.length;
         }
-        for (let i = user.current_index; i < min; i += 1|0) {
-          options.push(user.dataset[i]);
+        for (let i = user.current_index; i < min; i += 1) {
+          options.push(`${i}: ${user.dataset[i].item["相手"]}さんに借りているもの`);
         }
-        if (user.current_index + 5 < user.length) {
+        if (min - user.current_index === 0) {
+          res.send("データはありません");
+          return;
+        }
+        if (user.current_index + 5 < user.dataset.length) {
           user.current_index += 5
           options.push("次の５件");
           res.send({
@@ -73,12 +79,6 @@ module.exports = (robot) => {
             options: options
           });
         }
-        /*
-        res.send({
-          question: '選択',
-          options: ['完了', '編集', '支払い']
-        });
-        */
       } else {
         let user = robot.brain.get(res.message.user.name.toLowerCase()) || null;
         if (user === null) {
@@ -86,6 +86,8 @@ module.exports = (robot) => {
           user.dataset = [];
         }
         let data = new Data();
+        let is_borrow = (res.json.options[res.json.response] === "借りる");
+        res.send((is_borrow ? "借りた" : "貸した") + "相手の名前を〇〇さんの形で入力してください");
         data.state = State.TARGET;
         user.dataset.push(data);
         robot.brain.set(res.message.user.name.toLowerCase(), user);
@@ -93,6 +95,7 @@ module.exports = (robot) => {
     } else if (res.json.question === "選択") {
       if (res.json.options[res.json.response] === "完了") {
         // 完了のコード
+        res.send("Goodbye money!");
       } else if (res.json.options[res.json.response] === "編集") {
         // 編集のコード
         let user = robot.brain.get(res.message.user.name.toLowerCase());
@@ -128,6 +131,18 @@ module.exports = (robot) => {
     };
   });
 
+  robot.respond("yesno", (res) => {
+    if (res.json.question === "内容確認") {
+      if (res.json.response) {
+        let user = robot.brain.get(res.message.user.name.toLowerCase());
+        if (user === null) {
+          res.send("ERROR");
+        }
+        robot.brain.get(res.message.user.name.toLowerCase(), user);
+      }
+    }
+  });
+
   robot.respond(/(..*)さん$/, (res) => {
     let user = robot.brain.get(res.message.user.name.toLowerCase()) || null;
     let data = user.dataset[user.dataset.length - 1];
@@ -157,11 +172,11 @@ module.exports = (robot) => {
     let user = robot.brain.get(res.message.user.name.toLowerCase());
     let data = user.dataset[user.dataset.length - 1];
     if (data.state === State.DATE) {
-      data.item["借りた日付"] = new Date(res.match[1], res.match[2], res.match[3], 0, 0);
+      data.item["借りた日付"] = new Date(res.match[1], res.match[2] - 1, res.match[3], 0, 0);
       data.state = State.LIMIT;
       res.send("続いて期限を例のように入力してください\n(例: 1998年12月31日)");
     } else if (data.state === State.LIMIT) {
-      data.item["期限"] = new Date(res.match[1], res.match[2], res.match[3], 0, 0);
+      data.item["期限"] = new Date(res.match[1], res.match[2] - 1, res.match[3], 0, 0);
       data.state = State.DIVISION;
       res.send("分割回数は何回ですか?○回の形で入力してください(ただし、一括の場合は1回を入力してください)");
     } else {
@@ -221,6 +236,9 @@ module.exports = (robot) => {
         + (data.item["分割"] > 1 ? "\n周期: " + data.item["周期"] : "")
         + "\n詳細: " + data.item["詳細"]
         + "」");
+      res.send({
+        question: "内容確認"
+      });
     } else {
       res.send("この値は受け付けていません");
     }
