@@ -1,13 +1,23 @@
 'use strict';
 
 let State = {
-  TARGET: 0,
-  TOTAL: 1,
-  DESCRIPTION: 2,
-  DATE: 3,
-  LIMIT: 4,
-  DIVISION: 5,
-  FREQ: 6,
+  ID: 0,
+  TARGET: 1,
+  TOTAL: 2,
+  DESCRIPTION: 3,
+  DATE: 4,
+  LIMIT: 5,
+  DIVISION: 6,
+  REM: 7,
+  SPLIT: 8,
+  FREQ: 9,
+  LIST: 10,
+  BORROW: 11,
+  LEND: 12,
+  SELECT: 13,
+  DELETE: 14,
+  EDIT: 15,
+  PAY: 16,
 };
 
 class Data {
@@ -58,9 +68,36 @@ module.exports = (robot) => {
         // 完了のコード
       } else if (res.json.options[res.json.response] === "編集") {
         // 編集のコード
+        let user = robot.brain.get(res.message.user.name.toLowerCase());
+        res.send(user.dataset[user.selected_id].item["相手"]);
+        res.send("「"
+        + "\n総額: " + data.item["総額"]          
+        + "\n期限: " + dateToString(data.item["期限"])
+        + "\n分割: " + data.item["分割"] + "回払い"
+        + (data.item["分割"] > 1 ? "\n周期: " + data.item["周期"] : "")
+        + "\n詳細: " + data.item["詳細"]
+        + "」\n編集する項目を選択してください");
+        res.send({
+          question: '編集したい項目を選択',
+          options: ['総額', '期限', '分割方法','周期','詳細','キャンセル']
+        });
       } else if (res.json.options[res.json.response] === "支払い") {
         // 支払いのコード
       }
+    } else if (res.json.question === "編集したい項目を選択") {
+        if(res.json.options[res.json.responce] === "総額"){
+          //総額のコード
+        }else if(res.json.options[res.json.responce] === "期限"){
+          //詳細のコード
+        }else if(res.json.options[res.json.responce] === "分割方法"){
+          //期限のコード
+        }else if(res.json.options[res.json.responce] === "周期"){
+          //分割方法のコード
+        }else if (res.json.options[res.json.responce] === "詳細"){
+          //周期のコード
+        }else if(res.json.options[res.json.responce] === "キャンセル"){
+          //キャンセルのコード
+        };
     };
   });
 
