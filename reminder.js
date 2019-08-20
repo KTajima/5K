@@ -3,7 +3,7 @@
 const CronJob = require('cron').CronJob;
 require('date-utils');
 
-// 使用例
+// // 使用例
 // var event;
 // module.exports = (robot) => {
 //     if (!event) {
@@ -52,6 +52,7 @@ class Remind {
     // リマインダを有効にする
     startReminder() {
         this.comparedDate = new Date;
+        console.log("Hello")
         if (!this.reminderjob) {
             // スケジューラー(5秒間隔で)
             this.reminderjob = new CronJob({
@@ -66,6 +67,7 @@ class Remind {
     }
     // 日付が変わったか判定する. スケジューラにより呼び出される。
     checkChangeDay() {
+        console.log("Hello")
         require('date-utils');
         let now = new Date;
         if (now.getDate() != this.comparedDate.getDate()) {
@@ -85,7 +87,6 @@ class Remind {
     publishReminders() {
         // 全てのトークルームで回す
         for (let [id, room] of Object.entries(this.robot.brain.rooms())) {
-
             // データを取得
             var user = this.robot.brain.get(room.users[0].name.toLowerCase())
 
@@ -93,7 +94,6 @@ class Remind {
             if (!user) {
                 continue;
             } else {
-                let isExist = false;
                 // 現在時刻取得
                 let now = new Date();
 
@@ -104,13 +104,12 @@ class Remind {
                 for (let i of user) {
                     let compareDate = i["期限"]
                     // 日付比較。同じであればリマインダすべきデータとしてマークする。
-                    if (compareDate.getFullYear() == now.getFullYear() || compareDate.getMonth() == now.getMonth() || compareDate.getDate() == now.getDate()) {
-                        reminderData.pop(i);
-                        isExist = true;
+                    if (compareDate.getFullYear() == now.getFullYear() && compareDate.getMonth() == now.getMonth() && compareDate.getDate() == now.getDate()) {
+                        reminderData.push(i);
                     }
                 }
                 // リマインドすべきデータがあればリマインドする。
-                if (isExist) {
+                if (reminderData.length > 0) {
                     var str = "今日が返済日です。\n"
                     for (let i of user) {
                         str += i["相手"] + "さんに" + (i["一回あたりの額"]) + "円\n";
